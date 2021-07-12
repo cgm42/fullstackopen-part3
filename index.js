@@ -3,6 +3,27 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 const http = require('http');
+const morgan = require('morgan');
+// app.use(morgan('tiny'));
+
+const tokenBody = morgan.token('body', (req) => {
+  return JSON.stringify(req.body);
+})
+
+const mgn = morgan(function (tokens, req, res) {
+
+  return [
+    tokens.method(req, res),
+    tokens.url(req, res),
+    tokens.status(req, res),
+    tokens.res(req, res, 'content-length'), '-',
+    tokens['response-time'](req, res), 'ms',
+    tokens.body(req),
+  ].join(' ')
+})
+
+
+app.use(mgn);
 
 const persons = [
   { 
@@ -56,8 +77,9 @@ app.delete('/api/persons/:id', (request, response) => {
 const generateId = () => Math.floor(Math.random()*10000);
 
 app.post('/api/persons/', (request, response) => {
-  console.log(request.headers);
-  console.log('request.body :>> ', request.body);
+  // console.log(request.headers);
+  //  console.log('request :>> ', request);
+
   if(!request.body) {
     return response.status(400).json({
       error: 'content missing'
@@ -81,6 +103,8 @@ app.post('/api/persons/', (request, response) => {
   person['id'] = generateId();
 
   response.json(persons.concat(person));
+
+
 })
 
 const PORT = 3001
