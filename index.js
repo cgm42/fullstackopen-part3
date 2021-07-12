@@ -4,9 +4,10 @@ const app = express();
 app.use(express.json());
 const http = require('http');
 const morgan = require('morgan');
-const cors = require('cors')
-
+const cors = require('cors');
+app.use(express.static('build'));
 app.use(cors()); 
+import axios from 'axios';
 
 const tokenBody = morgan.token('body', (req) => {
   return JSON.stringify(req.body);
