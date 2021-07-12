@@ -6,8 +6,7 @@ const http = require('http');
 const morgan = require('morgan');
 const cors = require('cors')
 
-app.use(cors())
-// app.use(morgan('tiny'));
+app.use(cors()); 
 
 const tokenBody = morgan.token('body', (req) => {
   return JSON.stringify(req.body);
@@ -80,7 +79,7 @@ const generateId = () => Math.floor(Math.random()*10000);
 
 app.post('/api/persons/', (request, response) => {
   // console.log(request.headers);
-  //  console.log('request :>> ', request);
+    console.log('request :>> ', request);
 
   if(!request.body) {
     return response.status(400).json({
@@ -94,7 +93,7 @@ app.post('/api/persons/', (request, response) => {
     return response.status(400).json({
       error: 'number missing'
     })
-  }else if(persons.filter((e) => e.name === request.body['name'])) {
+  }else if(persons.filter((e) => e.name === request.body['name']).length > 0) {
     return response.status(400).json({
       error: 'name must be unique'
     })
