@@ -22,7 +22,6 @@ const mgn = morgan(function (tokens, req, res) {
   ].join(' ')
 })
 
-
 app.use(mgn);
 
 const persons = [
@@ -107,6 +106,7 @@ app.post('/api/persons/', (request, response) => {
 
 })
 
-const PORT = 3001
-app.listen(PORT)
-console.log(`Server running on port ${PORT}`)
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+})
