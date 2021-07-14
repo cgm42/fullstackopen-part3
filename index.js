@@ -9,10 +9,10 @@ app.use(express.static('build'));
 app.use(cors()); 
 require('dotenv').config();
 const Person = require('./models/person');
-
 const tokenBody = morgan.token('body', (req) => {
   return JSON.stringify(req.body);
 })
+
 const mgn = morgan(function (tokens, req, res) {
 
   return [
@@ -26,6 +26,15 @@ const mgn = morgan(function (tokens, req, res) {
 })
 app.use(mgn);
 
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+  if(error.name === 'ValidationError') {
+    return response.status(400).send({ error: ''})
+  }
+  next(error);
+}
+
+app.use(errorHandler);
 
 app.get('/api/persons', (request, response) => {
   Person.find({}).then(persons => {
@@ -33,37 +42,41 @@ app.get('/api/persons', (request, response) => {
   })
 })
 
-app.get('/info', (request, response) => {
-  response.send(`<h3>Phonebook has ${persons.length} entries </h3> ${new Date().toISOString()}`)
+app.get('/info', (request, response, next) => {
+  Person.countDocuments()
+    .then((length) => {
+      response.send(`<h3>Phonebook has ${length} entries </h3> ${new Date().toISOString()}`)
+    })
+    .catch((error) => next(error));
+  
 })
 
 app.get('/api/persons/:id', (request, response) => {
   const id = request.params.id
-  const person = persons.find(e => {
-    return e.id.toString() === id.toString()
+  const person = Person.findById(id, (error, person) => {
+      if (person) {
+      response.json(person);
+    } else {
+      response.status(404).end();
+    }
   })
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
+  
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
   const id=request.params.id;
     Person.findByIdAndRemove(id)
       .then(result => {
         response.status(204).end()
       })
-      .catch(error => next(error))
+      .catch(error => next(error)); 
   
 })
 
 const generateId = () => Math.floor(Math.random()*10000);
 
-app.post('/api/persons/', (request, response) => {
+app.post('/api/persons/', (request, response, next) => {
     console.log('request.body :>> ', request.body);
-
   // if(!request.body) {
   //   return response.status(400).json({
   //     error: 'content missing'
@@ -81,7 +94,6 @@ app.post('/api/persons/', (request, response) => {
   //     error: 'name must be unique'
   //   })
   // }
-  
   const body = request.body;
    if (body.content === "") {
      return response.status(400).json({ error: ' missing content' })
@@ -91,13 +103,30 @@ app.post('/api/persons/', (request, response) => {
     name: body.name,
     number: body.number,
   })
-  //person['id'] = generateId();
 
-  person.save().then(savedPerson => {
+  person.save()
+  .then(savedPerson => {
+    console.log('savedPerson :>> ', savedPerson);
     response.json(savedPerson)
   })
-
+  .catch(error => next(error)) 
 })
+
+app.put('/api/persons/:id', (request, response, next) => {
+  // console.log('request.body :>> ', request.body);
+  // console.log('request.params :>> ', request.params);
+  const person = {
+    name: request.body.name,
+    number: request.body.number,
+  }
+  const opts = { runValidators: true };
+  Person.findByIdAndUpdate(request.params.id, person, { new: true }, ost)
+    .then(updatedNote => {
+      response.json(updatedNote);
+    })
+    .catch(error => next(error));
+})
+
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
