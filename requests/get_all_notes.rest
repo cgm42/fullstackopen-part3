@@ -14,7 +14,7 @@ content-type: application/json
 
 {
   "name": "Maria Test",
-  "number": ""
+  "number": "123"
 }
 ###
 POST http://localhost:3001/api/persons/ HTTP/1.1
@@ -31,4 +31,11 @@ content-type: application/json
 {
   "name": "Arto Hellas",
   "number": "778-887-7788"
+}
+###
+POST http://localhost:3001/api/persons/ HTTP/1.1
+content-type: application/json
+
+{
+   
 }

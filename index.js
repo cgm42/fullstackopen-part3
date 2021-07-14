@@ -7,7 +7,9 @@ const morgan = require('morgan');
 const cors = require('cors');
 app.use(express.static('build'));
 app.use(cors()); 
-const mongoose = require('mongoose');
+require('dotenv').config();
+const Person = require('./models/person');
+
 const tokenBody = morgan.token('body', (req) => {
   return JSON.stringify(req.body);
 })
@@ -23,16 +25,6 @@ const mgn = morgan(function (tokens, req, res) {
   ].join(' ')
 })
 app.use(mgn);
-
-const url = `mongodb+srv://fullstack:qweasdzxc@cluster0.adag0.mongodb.net/person-app?retryWrites=true&w=majority`
-mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false, useCreateIndex: true });
-
-const personSchema = new mongoose.Schema({
-  name: String,
-  number: String,
-})
-
-const Person = mongoose.model('Person', personSchema);
 
 
 app.get('/api/persons', (request, response) => {
@@ -59,44 +51,55 @@ app.get('/api/persons/:id', (request, response) => {
 
 app.delete('/api/persons/:id', (request, response) => {
   const id=request.params.id;
-  person = persons.filter(person => person.id.toString() !== id.toString())
-  response.status(204).end();
+    Person.findByIdAndRemove(id)
+      .then(result => {
+        response.status(204).end()
+      })
+      .catch(error => next(error))
+  
 })
 
 const generateId = () => Math.floor(Math.random()*10000);
 
 app.post('/api/persons/', (request, response) => {
-  // console.log(request.headers);
-    console.log('request :>> ', request);
+    console.log('request.body :>> ', request.body);
 
-  if(!request.body) {
-    return response.status(400).json({
-      error: 'content missing'
-    })
-  }else if(!request.body['name']) {
-    return response.status(400).json({
-      error: 'name missing'
-    })  
-  }else if(!request.body["number"]) {
-    return response.status(400).json({
-      error: 'number missing'
-    })
-  }else if(persons.filter((e) => e.name === request.body['name']).length > 0) {
-    return response.status(400).json({
-      error: 'name must be unique'
-    })
-  }
+  // if(!request.body) {
+  //   return response.status(400).json({
+  //     error: 'content missing'
+  //   })
+  // }else if(!request.body['name']) {
+  //   return response.status(400).json({
+  //     error: 'name missing'
+  //   })  
+  // }else if(!request.body["number"]) {
+  //   return response.status(400).json({
+  //     error: 'number missing'
+  //   })
+  // }else if(persons.filter((e) => e.name === request.body['name']).length > 0) {
+  //   return response.status(400).json({
+  //     error: 'name must be unique'
+  //   })
+  // }
   
-  const person = request.body;
-  
-  person['id'] = generateId();
+  const body = request.body;
+   if (body.content === "") {
+     return response.status(400).json({ error: ' missing content' })
+   }
 
-  response.json(persons.concat(person));
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+  })
+  //person['id'] = generateId();
 
+  person.save().then(savedPerson => {
+    response.json(savedPerson)
+  })
 
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
