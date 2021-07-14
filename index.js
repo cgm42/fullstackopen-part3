@@ -124,7 +124,9 @@ app.put('/api/persons/:id', (request, response, next) => {
     .then(updatedNote => {
       response.json(updatedNote);
     })
-    .catch(error => next(error));
+    .catch(error => {
+      console.log(error.response.data);
+    });
 })
 
 
