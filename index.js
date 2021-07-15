@@ -1,16 +1,16 @@
-const { notStrictEqual } = require('assert');
-const express = require('express');
-const app = express();
-app.use(express.json());
-const http = require('http');
-const morgan = require('morgan');
-const cors = require('cors');
-app.use(express.static('build'));
-app.use(cors()); 
-require('dotenv').config();
-const Person = require('./models/person');
+const { notStrictEqual } = require('assert')
+const express = require('express')
+const app = express()
+app.use(express.json())
+const http = require('http')
+const morgan = require('morgan')
+const cors = require('cors')
+app.use(express.static('build'))
+app.use(cors())
+require('dotenv').config()
+const Person = require('./models/person')
 const tokenBody = morgan.token('body', (req) => {
-  return JSON.stringify(req.body);
+  return JSON.stringify(req.body)
 })
 
 const mgn = morgan(function (tokens, req, res) {
@@ -24,17 +24,17 @@ const mgn = morgan(function (tokens, req, res) {
     tokens.body(req),
   ].join(' ')
 })
-app.use(mgn);
+app.use(mgn)
 
 const errorHandler = (error, request, response, next) => {
-  console.error(error.message);
+  console.error(error.message)
   if(error.name === 'ValidationError') {
-    return response.status(400).send({ error: ''})
+    return response.status(400).send({ error: '' })
   }
-  next(error);
+  next(error)
 }
 
-app.use(errorHandler);
+app.use(errorHandler)
 
 app.get('/api/persons', (request, response) => {
   Person.find({}).then(persons => {
@@ -47,36 +47,36 @@ app.get('/info', (request, response, next) => {
     .then((length) => {
       response.send(`<h3>Phonebook has ${length} entries </h3> ${new Date().toISOString()}`)
     })
-    .catch((error) => next(error));
-  
+    .catch((error) => next(error))
+
 })
 
 app.get('/api/persons/:id', (request, response) => {
   const id = request.params.id
   const person = Person.findById(id, (error, person) => {
-      if (person) {
-      response.json(person);
+    if (person) {
+      response.json(person)
     } else {
-      response.status(404).end();
+      response.status(404).end()
     }
   })
-  
+
 })
 
 app.delete('/api/persons/:id', (request, response, next) => {
-  const id=request.params.id;
-    Person.findByIdAndRemove(id)
-      .then(result => {
-        response.status(204).end()
-      })
-      .catch(error => next(error)); 
-  
+  const id=request.params.id
+  Person.findByIdAndRemove(id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
+
 })
 
-const generateId = () => Math.floor(Math.random()*10000);
+//const generateId = () => Math.floor(Math.random()*10000)
 
 app.post('/api/persons/', (request, response, next) => {
-    console.log('request.body :>> ', request.body);
+  console.log('request.body :>> ', request.body)
   // if(!request.body) {
   //   return response.status(400).json({
   //     error: 'content missing'
@@ -84,7 +84,7 @@ app.post('/api/persons/', (request, response, next) => {
   // }else if(!request.body['name']) {
   //   return response.status(400).json({
   //     error: 'name missing'
-  //   })  
+  //   })
   // }else if(!request.body["number"]) {
   //   return response.status(400).json({
   //     error: 'number missing'
@@ -94,10 +94,10 @@ app.post('/api/persons/', (request, response, next) => {
   //     error: 'name must be unique'
   //   })
   // }
-  const body = request.body;
-   if (body.content === "") {
-     return response.status(400).json({ error: ' missing content' })
-   }
+  const body = request.body
+  if (body.content === '') {
+    return response.status(400).json({ error: ' missing content' })
+  }
 
   const person = new Person({
     name: body.name,
@@ -105,11 +105,11 @@ app.post('/api/persons/', (request, response, next) => {
   })
 
   person.save()
-  .then(savedPerson => {
-    console.log('savedPerson :>> ', savedPerson);
-    response.json(savedPerson)
-  })
-  .catch(error => next(error)) 
+    .then(savedPerson => {
+      console.log('savedPerson :>> ', savedPerson)
+      response.json(savedPerson)
+    })
+    .catch(error => next(error))
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
@@ -119,15 +119,16 @@ app.put('/api/persons/:id', (request, response, next) => {
     name: request.body.name,
     number: request.body.number,
   }
-  const opts = { runValidators: true };
-  Person.findByIdAndUpdate(request.params.id, person, { new: true }, ost)
+  const opts = { runValidators: true }
+  Person.findByIdAndUpdate(request.params.id, person, { new: true }, opts)
     .then(updatedNote => {
-      response.json(updatedNote);
+      response.json(updatedNote)
     })
     .catch(error => {
-      console.log(error.response.data);
-    });
+      console.log(error.response.data)
+    })
 })
+
 
 
 const PORT = process.env.PORT

@@ -39,3 +39,5 @@ content-type: application/json
 {
    
 }
+###
+DELETE DELETE http://localhost:3001/api/persons/60ee5cadafd2c6af6220d8ca HTTP/1.1
